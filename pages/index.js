@@ -84,6 +84,14 @@ export default function Home() {
           content="Listing Generator using the power of AI"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Listing Generator for realators!" />
+        <meta property="og:title" content="Listings Generator" />
+        <meta
+          property="og:description"
+          content="Help write your listings with the power of AI"
+        />
+        <meta property="og:url" content="https://www.listing-generator.com" />
+        <meta property="og:type" content="website" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
