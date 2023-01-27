@@ -130,6 +130,9 @@ export default function Home() {
               className="select-bordered select"
               onChange={(e) => setPropertyType(e.target.value)}
             >
+              <option disabled selected>
+                Pick one
+              </option>
               <option value="house">House</option>
               <option value="aparment">Apartment</option>
               <option value="condo">Condo</option>
