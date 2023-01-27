@@ -2,7 +2,8 @@ import Head from "next/head";
 
 import { Configuration, OpenAIApi } from "openai";
 import { XCircle } from "phosphor-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { RingLoader } from "react-spinners";
 
 export default function Home() {
   const [propertyType, setPropertyType] = useState("");
@@ -10,15 +11,27 @@ export default function Home() {
   const [sqft, setSqft] = useState("");
   const [beds, setBeds] = useState("");
   const [baths, setBaths] = useState("");
+  const [garage, setGarage] = useState("");
   const [pool, setPool] = useState(false);
   const [shed, setShed] = useState(false);
   const [patio, setPatio] = useState(false);
   const [solarPanels, setSolarPanels] = useState(false);
   const [gasCooking, setGasCooking] = useState(false);
   const [sprinklers, setSprinklers] = useState(false);
-  const [garage, setGarage] = useState(1);
   const [listingResponse, setListingResponse] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const [theme, setTheme] = useState("light");
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  useEffect(() => {
+    document.querySelector("html").setAttribute("data-theme", theme);
+  }, [theme]);
 
   //OPEN API//
   const configuration = new Configuration({
@@ -28,11 +41,25 @@ export default function Home() {
 
   const handleGenerateListing = async (e) => {
     e.preventDefault();
+    if (
+      propertyType === "" ||
+      stories === "" ||
+      sqft === "" ||
+      beds === "" ||
+      baths === "" ||
+      garage === ""
+    ) {
+      setError(true);
+      return;
+    }
+    setLoading(true);
     const response = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: `Write a listing about a ${
         stories > 1 ? `${stories} ${propertyType}` : `1 story ${propertyType}`
-      } that is ${sqft} square feet and has ${beds} bedrooms and ${baths} bathrooms ${
+      } that is ${sqft} square feet ${
+        garage >= 1 ? `${garage} car garage` : ""
+      } and has ${beds} bedrooms and ${baths} bathrooms ${
         pool ? "It also has a pool" : ""
       } ${gasCooking ? "It has gas cooking" : ""} ${
         patio ? "It Has a patio" : ""
@@ -43,6 +70,8 @@ export default function Home() {
       max_tokens: 250,
     });
     setListingResponse(response.data);
+    setError(false);
+    setLoading(false);
     setShowModal(true);
   };
 
@@ -57,12 +86,34 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="h-screen">
-        <div className="my-3 flex flex-col items-center justify-center">
+      <main>
+        {loading && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+            <RingLoader color="#560DF8" />
+          </div>
+        )}
+
+        <div className="form-control absolute  right-6 top-20 md:top-0 md:right-10">
+          <label className="label cursor-pointer space-x-2">
+            <span className="hidden md:block md:label-text">
+              Toggle Dark Mode
+            </span>
+            <input type="checkbox" className="toggle" onClick={toggleTheme} />
+          </label>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-3">
           <h1 className="text-4xl">Listing Generator</h1>
           <p>A listing generator using the power of AI</p>
         </div>
-        <form className="my-10 flex flex-col items-center justify-center">
+
+        {error && (
+          <div className="flex items-center justify-center">
+            <h1 className="text-red-400">All input fields must be field out</h1>
+          </div>
+        )}
+
+        <form className="my-3 flex flex-col items-center justify-center">
           <div className="form-control w-full max-w-xs">
             <label className="label">
               <span className="label-text">House/Apartment/Condo</span>
@@ -71,9 +122,6 @@ export default function Home() {
               className="select-bordered select"
               onChange={(e) => setPropertyType(e.target.value)}
             >
-              <option disabled selected>
-                Pick one
-              </option>
               <option value="house">House</option>
               <option value="aparment">Apartment</option>
               <option value="condo">Condo</option>
@@ -92,7 +140,7 @@ export default function Home() {
             {/* // SqFt // */}
             <label className="label">
               <span className="label-text">
-                Square footage of Home/Apartment
+                Square footage of Home/Apartment/Condo
               </span>
             </label>
             <input
@@ -101,6 +149,17 @@ export default function Home() {
               value={sqft}
               className="input-bordered input-primary input w-full max-w-xs"
               onChange={(e) => setSqft(e.target.value)}
+            />
+            {/* // Garage // */}
+            <label className="label">
+              <span className="label-text"># of Car Garage</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Garage"
+              value={garage}
+              className="input-bordered input-primary input w-full max-w-xs"
+              onChange={(e) => setGarage(e.target.value)}
             />
             {/* // No. Of Beds. // */}
             <label className="label">
@@ -194,9 +253,9 @@ export default function Home() {
         </form>
 
         {showModal && (
-          <>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
-              <div className="modal-box w-11/12 max-w-5xl">
+          <div className="flex items-center justify-center">
+            <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform md:w-auto  ">
+              <div className="modal-box w-full max-w-5xl">
                 <div className="absolute right-10 top-4 cursor-pointer text-[#560DF8]">
                   <XCircle size={32} onClick={() => setShowModal(false)} />
                 </div>
@@ -208,7 +267,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-          </>
+          </div>
         )}
       </main>
     </>
